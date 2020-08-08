@@ -35,20 +35,20 @@ for i in x:
     X.append(s)
 X=np.array(X).astype(np.float32)
 
-x_train=np.array(X[15:80])
-y_train=np.array(y[15:80])
+x_train=np.array(X[15:95])
+y_train=np.array(y[15:95])
 
 x_test=list()
 for i in X[0:15]:
     x_test.append(i)
-for i in X[80:]:
+for i in X[95:]:
     x_test.append(i)
 x_test=np.array(x_test)
 
 y_test=list()
 for i in y[0:15]:
     y_test.append(i)
-for i in y[80:]:
+for i in y[95:]:
     y_test.append(i)
 y_test=np.array(y_test)
 
