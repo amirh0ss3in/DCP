@@ -4,7 +4,7 @@ from keras.utils import to_categorical
 import matplotlib.pyplot as plt
 p=np.load("C:/Users/Amirhossein/Desktop/DCP_Negative_b.npy")
 n=np.load("C:/Users/Amirhossein/Desktop/DCP_positive_b.npy")
-
+#213
 yp=list()
 for i in range(len(p)):
     yp.append(1)
@@ -36,20 +36,20 @@ for i in x:
     X.append(s)
 X=np.array(X).astype(np.float32)
 
-x_train=np.array(X[20:261])
-y_train=np.array(y[20:261])
+x_train=np.array(X[20:193])
+y_train=np.array(y[20:193])
 
 x_test=list()
 for i in X[0:20]:
     x_test.append(i)
-for i in X[261:]:
+for i in X[193:]:
     x_test.append(i)
 x_test=np.array(x_test)
 
 y_test=list()
 for i in y[0:20]:
     y_test.append(i)
-for i in y[261:]:
+for i in y[193:]:
     y_test.append(i)
 y_test=np.array(y_test)
 
@@ -132,5 +132,5 @@ model.add(Dense(2, activation='softmax'))
 model.summary()
 
 # Compile the model
-model.compile(loss='categorical_crossentropy', optimizer=Adam(lr = 1e-10), metrics=['accuracy']) 
+model.compile(loss='categorical_crossentropy', optimizer='adam' , metrics=['accuracy']) 
 model.fit(x_train[:,12], y_train, validation_data=(x_test[:,12], y_test) ,batch_size=4 ,epochs=10)
