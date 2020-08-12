@@ -59,12 +59,13 @@ batch_size=2
                                 random_state=42) 
 
 train_datagen = keras.preprocessing.image.ImageDataGenerator(
-          zoom_range = 0.5,
+          zoom_range = 0.6,
           rotation_range=60,
           shear_range=0.2,
           width_shift_range = 0.2, 
           height_shift_range = 0.2,
           horizontal_flip = True,
+          zca_whitening=True,
           fill_mode ='nearest') 
 
 val_datagen = keras.preprocessing.image.ImageDataGenerator()
@@ -136,23 +137,24 @@ model.add(BatchNormalization())
 model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
 model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
-model.add(Dropout(0.4))
+#model.add(Dropout(0.4))
 model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
-model.add(Dropout(0.5))
+#model.add(Dropout(0.5))
 model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
 model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
-model.add(Dropout(0.2))
 model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
-model.add(Dropout(0.2))
+#model.add(Dropout(0.4))
+model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+#model.add(Dropout(0.4))
 model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
 model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 model.add(Flatten())
 model.add(Dense(1024, activation='relu'))
 model.add(BatchNormalization())
-model.add(Dropout(0.5))
+#model.add(Dropout(0.5))
 model.add(Dense(1024, activation='relu'))
-model.add(Dropout(0.5))
+#model.add(Dropout(0.5))
 model.add(Dense(2, activation='softmax'))
 model.summary()
 
