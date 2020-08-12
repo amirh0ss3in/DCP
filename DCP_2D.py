@@ -2,6 +2,11 @@ import numpy as np
 
 from keras.utils import to_categorical
 import matplotlib.pyplot as plt
+
+
+import keras
+from keras.utils import to_categorical
+import matplotlib.pyplot as plt
 p=np.load("C:/Users/Amirhossein/Desktop/DCP_Negative_b.npy")
 n=np.load("C:/Users/Amirhossein/Desktop/DCP_positive_b.npy")
 #213
@@ -36,10 +41,45 @@ for i in x:
     X.append(s)
 X=np.array(X).astype(np.float32)
 
-x_train=np.array(X[:])
+x_train=np.array(X[:,12])
 y_train=np.array(y[:])
 
 y_train=to_categorical(y_train)
+
+from keras.preprocessing.image import ImageDataGenerator
+
+from sklearn.model_selection import train_test_split
+
+data = x_train
+labels = y_train
+batch_size=2
+(trainX, testX, trainY, testY) = train_test_split(
+                                data,labels, 
+                                test_size=0.2, 
+                                random_state=42) 
+
+train_datagen = keras.preprocessing.image.ImageDataGenerator(
+          zoom_range = 0.3,
+          rotation_range=40,
+          shear_range=0.2,
+          width_shift_range = 0.2, 
+          height_shift_range = 0.2,
+          horizontal_flip = True,
+          fill_mode ='nearest') 
+
+val_datagen = keras.preprocessing.image.ImageDataGenerator()
+
+
+train_generator = train_datagen.flow(
+        trainX, 
+        trainY,
+        batch_size=batch_size,
+        shuffle=True)
+
+validation_generator = val_datagen.flow(
+                testX,
+                testY,
+                batch_size=batch_size) 
 
 
 from keras.models import Sequential , model_from_json
@@ -117,5 +157,14 @@ model.add(Dense(2, activation='softmax'))
 model.summary()
 
 # Compile the model
-model.compile(loss='categorical_crossentropy', optimizer=Adam(lr = 1e-20), metrics=['accuracy']) 
-model.fit(x_train[:,12], y_train,shuffle=True, validation_split=0.1 ,batch_size=4 ,epochs=10)
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy']) 
+
+model.fit_generator(
+        train_generator,
+        steps_per_epoch=100 // batch_size,
+        epochs=50,
+        validation_data=validation_generator,
+        validation_steps=40 // batch_size)
+
+#model.fit(trainX, trainY , shuffle=True,validation_data=(testX ,testY),batch_size=4 ,epochs=10)
+
