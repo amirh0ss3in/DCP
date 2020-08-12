@@ -59,8 +59,8 @@ batch_size=2
                                 random_state=42) 
 
 train_datagen = keras.preprocessing.image.ImageDataGenerator(
-          zoom_range = 0.3,
-          rotation_range=40,
+          zoom_range = 0.5,
+          rotation_range=60,
           shear_range=0.2,
           width_shift_range = 0.2, 
           height_shift_range = 0.2,
@@ -161,10 +161,10 @@ model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accur
 
 model.fit_generator(
         train_generator,
-        steps_per_epoch=100 // batch_size,
+        steps_per_epoch=len(trainX) // batch_size,
         epochs=50,
         validation_data=validation_generator,
-        validation_steps=40 // batch_size)
+        validation_steps=len(testX) // batch_size)
 
 #model.fit(trainX, trainY , shuffle=True,validation_data=(testX ,testY),batch_size=4 ,epochs=10)
 
