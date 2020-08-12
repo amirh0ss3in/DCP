@@ -36,25 +36,10 @@ for i in x:
     X.append(s)
 X=np.array(X).astype(np.float32)
 
-x_train=np.array(X[20:193])
-y_train=np.array(y[20:193])
-
-x_test=list()
-for i in X[0:20]:
-    x_test.append(i)
-for i in X[193:]:
-    x_test.append(i)
-x_test=np.array(x_test)
-
-y_test=list()
-for i in y[0:20]:
-    y_test.append(i)
-for i in y[193:]:
-    y_test.append(i)
-y_test=np.array(y_test)
+x_train=np.array(X[:])
+y_train=np.array(y[:])
 
 y_train=to_categorical(y_train)
-y_test=to_categorical(y_test)
 
 
 from keras.models import Sequential , model_from_json
@@ -132,5 +117,5 @@ model.add(Dense(2, activation='softmax'))
 model.summary()
 
 # Compile the model
-model.compile(loss='categorical_crossentropy', optimizer='adam' , metrics=['accuracy']) 
-model.fit(x_train[:,12], y_train, validation_data=(x_test[:,12], y_test) ,batch_size=4 ,epochs=10)
+model.compile(loss='categorical_crossentropy', optimizer=Adam(lr = 1e-20), metrics=['accuracy']) 
+model.fit(x_train[:,12], y_train,shuffle=True, validation_split=0.1 ,batch_size=4 ,epochs=10)
