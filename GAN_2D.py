@@ -71,7 +71,7 @@ def define_discriminator(in_shape=(256,256,1)):
 	model.add(Dropout(0.5))
 	model.add(BatchNormalization())
 	model.add(Flatten())
-	model.add(Dense(1, activation='softmax'))
+	model.add(Dense(1, activation='sigmoid'))
 	# compile model
 	opt = Adam(lr=0.0002, beta_1=0.5)
 	model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
@@ -93,7 +93,7 @@ def define_generator(latent_dim):
 	model.add(Conv2DTranspose(a, (64,64), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
 	model.add(BatchNormalization())
-	model.add(Conv2D(1, (64,64), activation='softmax', padding='same'))
+	model.add(Conv2D(1, (64,64), activation='tanh', padding='same'))
 	return model
 
 # define the combined generator and discriminator model, for updating the generator
