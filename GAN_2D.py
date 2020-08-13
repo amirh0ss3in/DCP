@@ -2,16 +2,10 @@ import numpy as np
 
 from keras.utils import to_categorical
 import matplotlib.pyplot as plt
-p=np.load("C:/Users/Amirhossein/Desktop/DCP_Negative_M.npy")
-n=np.load("C:/Users/Amirhossein/Desktop/DCP_positive_M.npy")
+p=np.load("C:/Users/Amirhossein/Desktop/DCP_Negative_b.npy")
+n=np.load("C:/Users/Amirhossein/Desktop/DCP_positive_b.npy")
 
-yp=list()
-for i in range(len(p)):
-    yp.append(1)
 
-yn=list()
-for i in range(len(n)):
-    yn.append(0)
 
 x=list()
 for i in p:
@@ -19,13 +13,7 @@ for i in p:
 for i in n:
     x.append(i)
 
-y=list()
-for i in yp:
-    y.append(i)
-for i in yn:
-    y.append(i)
 
-y=np.array(y)
 
 x=np.array(x).astype(np.float32)
 x/=255.0
@@ -36,27 +24,9 @@ for i in x:
     X.append(s)
 X=np.array(X).astype(np.float32)
 
-x_train=np.array(X[20:261])
-y_train=np.array(y[20:261])
+x_train=np.array(X[:])
 
-x_test=list()
-for i in X[0:20]:
-    x_test.append(i)
-for i in X[261:]:
-    x_test.append(i)
-x_test=np.array(x_test)
-
-y_test=list()
-for i in y[0:20]:
-    y_test.append(i)
-for i in y[261:]:
-    y_test.append(i)
-y_test=np.array(y_test)
-
-y_train=to_categorical(y_train)
-y_test=to_categorical(y_test)
-
-
+from keras.layers import GaussianNoise
 from keras.models import Sequential , model_from_json
 from keras.layers import LeakyReLU, Dense, Conv2D , Flatten , MaxPooling2D , Dropout, LSTM , ConvLSTM2D , BatchNormalization ,Conv3D,MaxPooling3D, Input , ZeroPadding2D ,Convolution2D ,ZeroPadding3D
 from keras import Model
@@ -90,19 +60,23 @@ from matplotlib import pyplot
 # define the standalone discriminator model
 def define_discriminator(in_shape=(256,256,1)):
 	model = Sequential()
-	model.add(Conv2D(64, (3,3), strides=(2, 2), padding='same', input_shape=in_shape))
-	model.add(LeakyReLU(alpha=0.2))
-	model.add(Dropout(0.4))
+	model.add(Input(shape=in_shape))
+	model.add(GaussianNoise(0.4))
 	model.add(Conv2D(64, (3,3), strides=(2, 2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
-	model.add(Dropout(0.4))
+	model.add(Dropout(0.5))
+	model.add(BatchNormalization())
+	model.add(Conv2D(64, (3,3), strides=(2, 2), padding='same'))
+	model.add(LeakyReLU(alpha=0.2))
+	model.add(Dropout(0.5))
+	model.add(BatchNormalization())
 	model.add(Flatten())
-	model.add(Dense(1, activation='sigmoid'))
+	model.add(Dense(1, activation='softmax'))
 	# compile model
 	opt = Adam(lr=0.0002, beta_1=0.5)
 	model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 	return model
-a=len(x_test[:,12])
+a=len(x_train[60:120,12])
 # define the standalone generator model
 def define_generator(latent_dim):
 	model = Sequential()
@@ -114,10 +88,12 @@ def define_generator(latent_dim):
 	# upsample to 14x14
 	model.add(Conv2DTranspose(a, (4,4), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
-	# upsample to 28x28
+	model.add(BatchNormalization())
+	#upsample to 28x28
 	model.add(Conv2DTranspose(a, (64,64), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
-	model.add(Conv2D(1, (64,64), activation='sigmoid', padding='same'))
+	model.add(BatchNormalization())
+	model.add(Conv2D(1, (64,64), activation='softmax', padding='same'))
 	return model
 
 # define the combined generator and discriminator model, for updating the generator
@@ -131,14 +107,14 @@ def define_gan(g_model, d_model):
 	# add the discriminator
 	model.add(d_model)
 	# compile model
-	opt = Adam(lr=0.0002, beta_1=0.5)
+	opt = Adam(lr=0.00002, beta_1=0.5)
 	model.compile(loss='binary_crossentropy', optimizer=opt)
 	return model
 
 
 # load and prepare mnist training images
 def load_real_samples():
-	X= x_test[:,12]
+	X= x_train[60:120 ,12]
 	return X
 
 # select real samples
@@ -203,7 +179,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 	#g_model.save(filename)
 
 # train the generator and discriminator
-def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=256):
+def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=10, n_batch=4):
 	bat_per_epo = int(dataset.shape[0] / n_batch)
 	half_batch = int(n_batch / 2)
 	# manually enumerate epochs
@@ -239,7 +215,7 @@ g_model = define_generator(latent_dim)
 # create the gan
 gan_model = define_gan(g_model, d_model)
 # load image data
-dataset = x_train[:,12]
+dataset = x_train[60:120,12]
 # train model
 train(g_model, d_model, gan_model, dataset, latent_dim)
 
