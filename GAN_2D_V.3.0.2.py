@@ -68,15 +68,15 @@ def define_discriminator(in_shape=(112,112,1)):
 def define_generator(latent_dim):
 	model = Sequential()
 	# foundation for 7x7 image
-	n_nodes = 128 *28 * 28
+	n_nodes = 256 *28 * 28
 	model.add(Dense(n_nodes, input_dim=latent_dim))
 	model.add(LeakyReLU(alpha=0.2))
-	model.add(Reshape((28, 28, 128)))
+	model.add(Reshape((28, 28, 256)))
 	# upsample to 14x14
-	model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding='same'))
+	model.add(Conv2DTranspose(256, (4,4), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
 	# upsample to 28x28
-	model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding='same'))
+	model.add(Conv2DTranspose(256, (4,4), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
 	model.add(Conv2D(1, (28,28), activation='sigmoid', padding='same'))
 	return model
