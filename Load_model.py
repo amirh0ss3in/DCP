@@ -135,6 +135,14 @@ d_model, c_model=define_discriminator()
 
 c_model.load_weights("c_model.h5")
 
+
+"""
+Note that in binary classification,
+recall of the positive class is also known as "sensitivity";
+recall of the negative class is "specificity". 
+"""
+
+
 _, acc = c_model.evaluate(Xd, ytr, verbose=0)
 print('Classifier Accuracy: %.3f%%' % (acc * 100))
 
