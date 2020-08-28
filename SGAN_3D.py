@@ -262,3 +262,4 @@ gan_model = define_gan(g_model, d_model)
 dataset = load_real_samples()
 # train model
 train(g_model, d_model, c_model, gan_model, dataset, latent_dim)
+ 
