@@ -1,10 +1,11 @@
-
+#import os
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 import numpy as np
- 
 
+ 
 p=np.load("/content/drive/My Drive/DCP/DCP_positive_b.npy")
 n=np.load("/content/drive/My Drive/DCP/DCP_negative_b.npy")
-PP=56
+PP=32
 data=list()
 for i in n:
     data.append(i)
@@ -88,8 +89,8 @@ def define_discriminator(in_shape=(25,PP,PP,1), n_classes=2):
     fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(fe)
     fe = LeakyReLU(alpha=0.2)(fe)
     # downsample
-    fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(fe)
-    fe = LeakyReLU(alpha=0.2)(fe)
+    #fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(fe)
+    #fe = LeakyReLU(alpha=0.2)(fe)
     # flatten feature maps
     fe = Flatten()(fe)
     # dropout
@@ -113,10 +114,10 @@ def define_generator(latent_dim):
     # image generator input
     in_lat = Input(shape=(latent_dim,))
     # foundation for 14x14 image
-    n_nodes = 64 * PP//4 *  PP//4 * 25
+    n_nodes = 128 * PP//4 *  PP//4 * 25
     gen = Dense(n_nodes)(in_lat)
     gen = LeakyReLU(alpha=0.2)(gen)
-    gen = Reshape((25 , PP//4 , PP//4 , 64))(gen)
+    gen = Reshape((25 , PP//4 , PP//4 , 128))(gen)
     # upsample to 28x28
     gen = Conv3DTranspose(256, (2,4,4), strides=(1,2,2), padding='same')(gen)
     gen = LeakyReLU(alpha=0.2)(gen)
@@ -138,7 +139,7 @@ def define_gan(g_model, d_model):
     # define gan model as taking noise and outputting a classification
     model = Model(g_model.input, gan_output)
     # compile model
-    opt = Adam(lr=0.0002, beta_1=0.5)
+    opt = Adam(lr=0.0002, beta_1=0.3)
     model.compile(loss='binary_crossentropy', optimizer=opt)
     return model
  
@@ -196,7 +197,7 @@ def generate_fake_samples(generator, latent_dim, n_samples):
     return images, y
 from sklearn.metrics import classification_report
 # generate samples and save as a plot and save the model
-def summarize_performance(step, g_model, c_model, latent_dim, dataset, n_samples=100):
+def summarize_performance(step, g_model, c_model, latent_dim, dataset, n_samples=200):
     # prepare fake examples
     X, _ = generate_fake_samples(g_model, latent_dim, n_samples)
     # scale from [-1,1] to [0,1]
@@ -250,7 +251,7 @@ def train(g_model, d_model, c_model, gan_model, dataset, latent_dim, n_epochs=10
             summarize_performance(i, g_model, c_model, latent_dim, dataset)
  
 # size of the latent space
-latent_dim = 150
+latent_dim = 100
 # create the discriminator models
 d_model, c_model = define_discriminator()
 # create the generator
