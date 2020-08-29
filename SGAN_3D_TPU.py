@@ -1,34 +1,15 @@
 import tensorflow as tf
+import os
 #Get a handle to the attached TPU. On GCP it will be the CloudTPU itself
 resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
 #Connect to the TPU handle and initialise it
 tf.config.experimental_connect_to_cluster(resolver)
 tf.tpu.experimental.initialize_tpu_system(resolver)
-
 strategy = tf.distribute.experimental.TPUStrategy(resolver)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import os
 #os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 import numpy as np
 
- 
 p=np.load("/content/drive/My Drive/DCP/DCP_positive_b.npy")
 n=np.load("/content/drive/My Drive/DCP/DCP_negative_b.npy")
 PP=32
