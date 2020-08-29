@@ -87,70 +87,71 @@ def custom_activation(output):
  
 # define the standalone supervised and unsupervised discriminator models
 def define_discriminator(in_shape=(25,PP,PP,1), n_classes=2):
+    # image input
+    in_image = Input(shape=in_shape)
+    # downsample
+    fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(in_image)
+    fe = LeakyReLU(alpha=0.2)(fe)
+    # downsample
+    fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(fe)
+    fe = LeakyReLU(alpha=0.2)(fe)
+    # downsample
+    #fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(fe)
+    #fe = LeakyReLU(alpha=0.2)(fe)
+    # flatten feature maps
+    fe = Flatten()(fe)
+    # dropout
+    fe = Dropout(0.4)(fe)
+    # output layer nodes
+    fe = Dense(n_classes)(fe)
+    # supervised output
+    c_out_layer = Activation('softmax')(fe)
+    # define and compile supervised discriminator model
+    c_model = Model(in_image, c_out_layer)
+    c_model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(lr=0.0002, beta_1=0.5), metrics=['accuracy'])
+    # unsupervised output
+    d_out_layer = Lambda(custom_activation)(fe)
+    # define and compile unsupervised discriminator model
+    d_model = Model(in_image, d_out_layer)
+    d_model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.0002, beta_1=0.5))
     with strategy.scope():
-      # image input
-      in_image = Input(shape=in_shape)
-      # downsample
-      fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(in_image)
-      fe = LeakyReLU(alpha=0.2)(fe)
-      # downsample
-      fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(fe)
-      fe = LeakyReLU(alpha=0.2)(fe)
-      # downsample
-      #fe = Conv3D(256, (5,5,5), strides=(2,2,2), padding='same')(fe)
-      #fe = LeakyReLU(alpha=0.2)(fe)
-      # flatten feature maps
-      fe = Flatten()(fe)
-      # dropout
-      fe = Dropout(0.4)(fe)
-      # output layer nodes
-      fe = Dense(n_classes)(fe)
-      # supervised output
-      c_out_layer = Activation('softmax')(fe)
-      # define and compile supervised discriminator model
-      c_model = Model(in_image, c_out_layer)
-      c_model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(lr=0.0002, beta_1=0.5), metrics=['accuracy'])
-      # unsupervised output
-      d_out_layer = Lambda(custom_activation)(fe)
-      # define and compile unsupervised discriminator model
-      d_model = Model(in_image, d_out_layer)
-      d_model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.0002, beta_1=0.5))
       return d_model, c_model
  
 # define the standalone generator model
 def define_generator(latent_dim):
+    # image generator input
+    in_lat = Input(shape=(latent_dim,))
+    # foundation for 14x14 image
+    n_nodes = 128 * PP//4 *  PP//4 * 25
+    gen = Dense(n_nodes)(in_lat)
+    gen = LeakyReLU(alpha=0.2)(gen)
+    gen = Reshape((25 , PP//4 , PP//4 , 128))(gen)
+    # upsample to 28x28
+    gen = Conv3DTranspose(256, (2,4,4), strides=(1,2,2), padding='same')(gen)
+    gen = LeakyReLU(alpha=0.2)(gen)
+    # upsample to 56x56
+    gen = Conv3DTranspose(256, (2,4,4), strides=(1,2,2), padding='same')(gen)
+    gen = LeakyReLU(alpha=0.2)(gen)
+    # output
+    out_layer = Conv3D(1, (25 ,PP//4 ,PP//4 ), activation='tanh', padding='same')(gen)
+    # define model
+    model = Model(in_lat, out_layer)
     with strategy.scope():
-      # image generator input
-      in_lat = Input(shape=(latent_dim,))
-      # foundation for 14x14 image
-      n_nodes = 128 * PP//4 *  PP//4 * 25
-      gen = Dense(n_nodes)(in_lat)
-      gen = LeakyReLU(alpha=0.2)(gen)
-      gen = Reshape((25 , PP//4 , PP//4 , 128))(gen)
-      # upsample to 28x28
-      gen = Conv3DTranspose(256, (2,4,4), strides=(1,2,2), padding='same')(gen)
-      gen = LeakyReLU(alpha=0.2)(gen)
-      # upsample to 56x56
-      gen = Conv3DTranspose(256, (2,4,4), strides=(1,2,2), padding='same')(gen)
-      gen = LeakyReLU(alpha=0.2)(gen)
-      # output
-      out_layer = Conv3D(1, (25 ,PP//4 ,PP//4 ), activation='tanh', padding='same')(gen)
-      # define model
-      model = Model(in_lat, out_layer)
       return model
  
 # define the combined generator and discriminator model, for updating the generator
 def define_gan(g_model, d_model):
+    
+    # make weights in the discriminator not trainable
+    d_model.trainable = False
+    # connect image output from generator as input to discriminator
+    gan_output = d_model(g_model.output)
+    # define gan model as taking noise and outputting a classification
+    model = Model(g_model.input, gan_output)
+    # compile model
+    opt = Adam(lr=0.0002, beta_1=0.3)
+    model.compile(loss='binary_crossentropy', optimizer=opt)
     with strategy.scope():
-      # make weights in the discriminator not trainable
-      d_model.trainable = False
-      # connect image output from generator as input to discriminator
-      gan_output = d_model(g_model.output)
-      # define gan model as taking noise and outputting a classification
-      model = Model(g_model.input, gan_output)
-      # compile model
-      opt = Adam(lr=0.0002, beta_1=0.3)
-      model.compile(loss='binary_crossentropy', optimizer=opt)
       return model
  
 # load the images
