@@ -40,7 +40,7 @@ from numpy import asarray
 from numpy.random import randn
 from numpy.random import randint
  
-from keras.optimizers import Adam
+from keras.optimizers import Adam , SGD
 from keras.models import Model
 from keras.layers import Input
 from keras.layers import Dense
@@ -89,7 +89,7 @@ def define_discriminator(in_shape=(56,56,1), n_classes=2):
     d_out_layer = Lambda(custom_activation)(fe)
     # define and compile unsupervised discriminator model
     d_model = Model(in_image, d_out_layer)
-    d_model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.0002, beta_1=0.5))
+    d_model.compile(loss='binary_crossentropy', optimizer=SGD())
     return d_model, c_model
  
 # define the standalone generator model
@@ -186,17 +186,17 @@ def summarize_performance(step, g_model, c_model, latent_dim, dataset, n_samples
     # scale from [-1,1] to [0,1]
     X = (X + 1) / 2.0
     # plot images
-    #for i in range(100):
+    for i in range(100):
     #    # define subplot
-    #    pyplot.subplot(10, 10, 1 + i)
-    #    # turn off axis
-    #    pyplot.axis('off')
+        pyplot.subplot(10, 10, 1 + i)
+        # turn off axis
+        pyplot.axis('off')
         # plot raw pixel data
-    #    pyplot.imshow(X[i, :, :, 0], cmap='gray_r')
+        pyplot.imshow(X[i, :, :, 0], cmap='gray_r')
     # save plot to file
-    #filename1 = 'generated_plot_%04d.png' % (step+1)
-    #pyplot.savefig(filename1)
-    #pyplot.close()
+    filename1 = 'generated_plot_%04d.png' % (step+1)
+    pyplot.savefig(filename1)
+    pyplot.close()
     # evaluate the classifier model
     X, y = dataset
     _, acc = c_model.evaluate(X, y, verbose=0)
@@ -216,7 +216,7 @@ def summarize_performance(step, g_model, c_model, latent_dim, dataset, n_samples
     #print('>Saved: %s, %s, and %s' % (filename1, filename2, filename3))
  
 # train the generator and discriminator
-def train(g_model, d_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=2,l_d=list(),l_g=list(),l_c=list()):
+def train(g_model, d_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=2,l_d1=list(),l_d2=list(),l_g=list(),l_c=list()):
     # select supervised dataset
     X_sup, y_sup = select_supervised_samples(dataset)
     print(X_sup.shape, y_sup.shape)
@@ -243,18 +243,36 @@ def train(g_model, d_model, c_model, gan_model, dataset, latent_dim, n_epochs=10
         # summarize loss on this batch
         print('>%d, c[%.3f,%.0f], d[%.3f,%.3f], g[%.3f]' % (i+1, c_loss, c_acc*100, d_loss1, d_loss2, g_loss))
         # evaluate the model performance every so often
+        l_g.append(g_loss)
+        l_d1.append(d_loss1)
+        l_d2.append(d_loss2)
+        l_c.append(c_loss)
+
+        
+
+        pyplot.subplot(4, 1, 1)
+        pyplot.plot(l_d1)
+        
+        pyplot.subplot(4, 1, 2)
+        pyplot.plot(l_d2)
+
+        pyplot.subplot(4, 1, 3)
+        pyplot.plot(l_g)
+
+        pyplot.subplot(4, 1, 4)
+        pyplot.plot(l_c)
+
+        pyplot.pause(0.00001)
         if (i+1) % (bat_per_epo * 1) == 0:
             summarize_performance(i, g_model, c_model, latent_dim, dataset)
-            l_g.append(g_loss)
-            l_d.append(d_loss1)
-            l_c.append(c_loss)
-    print(l_d,l_g,l_c)
-    pyplot.plot(l_d)
+    pyplot.figure()
+    pyplot.show()
+    pyplot.plot(l_d1)
     pyplot.plot(l_g)
     pyplot.plot(l_c)
     pyplot.savefig("loss")
 # size of the latent space
-latent_dim = 150
+latent_dim = 50
 # create the discriminator models
 d_model, c_model = define_discriminator()
 # create the generator
