@@ -247,30 +247,22 @@ def train(g_model, d_model, c_model, gan_model, dataset, latent_dim, n_epochs=10
         l_d1.append(d_loss1)
         l_d2.append(d_loss2)
         l_c.append(c_loss)
-
-        
-
-        pyplot.subplot(4, 1, 1)
+        pyplot.subplot(3, 1, 1)
         pyplot.plot(l_d1)
-        
-        pyplot.subplot(4, 1, 2)
+        pyplot.legend(['Discriminator loss, real'], loc='upper left')
         pyplot.plot(l_d2)
-
-        pyplot.subplot(4, 1, 3)
+        pyplot.legend(['Discriminator loss, fake'], loc='upper left')
+        pyplot.subplot(3, 1, 2)
         pyplot.plot(l_g)
-
-        pyplot.subplot(4, 1, 4)
+        pyplot.legend(['Gan loss'], loc='upper left')
+        pyplot.subplot(3, 1, 3)
         pyplot.plot(l_c)
-
+        pyplot.legend(['Classifier loss'], loc='upper left')
         pyplot.pause(0.00001)
         if (i+1) % (bat_per_epo * 1) == 0:
             summarize_performance(i, g_model, c_model, latent_dim, dataset)
     pyplot.figure()
     pyplot.show()
-    pyplot.plot(l_d1)
-    pyplot.plot(l_g)
-    pyplot.plot(l_c)
-    pyplot.savefig("loss")
 # size of the latent space
 latent_dim = 50
 # create the discriminator models
